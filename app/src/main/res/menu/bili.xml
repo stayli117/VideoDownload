@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group
+        android:id="@+id/group_single"
+        android:checkableBehavior="all"
+        android:enabled="true"
+        android:menuCategory="system">
+        <item
+            android:id="@+id/auto_del_video"
+            android:checked="false"
+            android:title="自动删除原始视频" />
+        <item
+            android:id="@+id/auto_mp4"
+            android:checked="true"
+            android:title="自动转码" />
+        <item
+            android:id="@+id/auto_save_cover"
+            android:checked="true"
+            android:title="自动保存封面" />
+    </group>
+
+
+</menu>
