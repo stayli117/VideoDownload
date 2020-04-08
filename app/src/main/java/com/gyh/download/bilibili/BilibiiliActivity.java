@@ -1,5 +1,8 @@
 package com.gyh.download.bilibili;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -20,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -74,6 +78,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
     private RecyclerView Spinner_page;
     private RecyclerView spinner_quality;
     private ImageView imageView_cover;
+    private VideoView mVideoView;
     private DemoViewModel mViewModel;
     private Button mBtnGetVideo;
     private DownloadTask mTask;
@@ -84,10 +89,12 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
     private boolean isDelVideo = true;
     private boolean isAutoToMp4 = true;
     private boolean isSaveCover = true;
+    private boolean isAutoPlay = true;
     private HorizontalRvManager<QualityData> mHorQualityRvManager;
     private HorizontalRvManager<PageData> mHorPageRvManager;
 
     private InputData inputData = new InputData();
+    private ProgressDialog progressDialog;
 
 
     @Override
@@ -111,6 +118,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
         spinner_quality = findViewById(R.id.Spinner_quality);
         Spinner_page = ((RecyclerView) findViewById(R.id.Spinner_page));
         imageView_cover = ((ImageView) findViewById(R.id.ImageView_cover));
+        mVideoView = findViewById(R.id.video_view);
 
         mBtnGetVideo.setOnClickListener(this);
         mBtnDownVideo.setOnClickListener(this);
@@ -145,6 +153,9 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.auto_save_cover:
                 isSaveCover = item.isChecked();
+                break;
+            case R.id.auto_play:
+                isAutoPlay = item.isChecked();
                 break;
         }
         return false;
@@ -231,7 +242,11 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
         videoData.observe(this, new Observer<Data>() {
             @Override
             public void onChanged(final Data data) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
                 setVideoInfo(data);
+                imageView_cover.setVisibility(View.VISIBLE);
                 Glide.with(BilibiiliActivity.this)
                         .asBitmap()
                         .load(data.getCoverLink())
@@ -362,6 +377,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
     }
 
     public void loadData() {
+        showWaiting();
         String str = getAvOrBvNum();
         if (isBvNum(str)) {
             inputData.setBid(str);
@@ -380,10 +396,18 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
             Toast.makeText(this, "当前无网络.", Toast.LENGTH_LONG).show();
             return;
         }
+        if (mVideoView != null && mVideoView.isPlaying()) {
+            mVideoView.suspend();
+            mVideoView.stopPlayback();
+        }
         mViewModel.loadVideoData(inputData);
     }
 
     public void update() {
+        if (mVideoView != null && mVideoView.isPlaying()) {
+            mVideoView.suspend();
+            mVideoView.stopPlayback();
+        }
         mViewModel.updateVideoData(inputData);
     }
 
@@ -476,7 +500,8 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                         isToMp4ing = false;
                         scanFile(outFile);
                         Toast.makeText(BilibiiliActivity.this, "转码完成", Toast.LENGTH_SHORT).show();
-                        showDialogTip(srcPath);
+                        deleteSrcVideo(srcPath);
+                        showDialogTip(outFilePath);
                     }
 
                     @Override
@@ -506,14 +531,58 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                 });
     }
 
-    private void showDialogTip(String srcPath) {
+    private void showDialogTip(final String outFilePath) {
+        if (isAutoPlay) {
+            playVideo(outFilePath);
+            return;
+        }
+        AlertDialog dialog = new AlertDialog.Builder(this).setIcon(R.mipmap.ic_launcher)
+                .setTitle("视频播放")
+                .setMessage("播放当前视频").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        playVideo(outFilePath);
+                    }
+                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                }).create();
+        dialog.show();
+
+    }
+
+    private void playVideo(String outFilePath) {
+        if (mVideoView == null) return;
+        imageView_cover.setVisibility(View.GONE);
+
+        mVideoView.setVideoPath(outFilePath);
+        mVideoView.start();
+
+    }
+
+    /**
+     * 圆圈加载进度的 dialog
+     */
+    private void showWaiting() {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setIcon(R.mipmap.ic_launcher);
+        progressDialog.setTitle("视频信息获取");
+        progressDialog.setMessage("加载中...");
+        progressDialog.setIndeterminate(true);// 是否形成一个加载动画  true表示不明确加载进度形成转圈动画  false 表示明确加载进度
+        progressDialog.setCancelable(false);//点击返回键或者dialog四周是否关闭dialog  true表示可以关闭 false表示不可关闭
+        progressDialog.show();
+
+    }
+
+    private void deleteSrcVideo(String srcPath) {
         if (!isDelVideo) return;
         File file = new File(srcPath);
         if (file.exists() && file.isFile()) {
             file.delete();
         }
     }
-
 
     private void scanFile(final File file) {
         sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
@@ -563,9 +632,31 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
         return false;
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mVideoView != null && !mVideoView.isPlaying()) {
+            mVideoView.start();
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mVideoView != null && mVideoView.canPause()) {
+            mVideoView.pause();
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mVideoView != null) {
+            mVideoView.suspend();
+            mVideoView.stopPlayback();
+        }
         AriaManager.get().unRegister();
     }
 

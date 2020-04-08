@@ -8,7 +8,7 @@
         android:menuCategory="system">
         <item
             android:id="@+id/auto_del_video"
-            android:checked="false"
+            android:checked="true"
             android:title="自动删除原始视频" />
         <item
             android:id="@+id/auto_mp4"
@@ -18,6 +18,10 @@
             android:id="@+id/auto_save_cover"
             android:checked="true"
             android:title="自动保存封面" />
+        <item
+            android:id="@+id/auto_play"
+            android:checked="true"
+            android:title="自动播放视频" />
     </group>
 
 
