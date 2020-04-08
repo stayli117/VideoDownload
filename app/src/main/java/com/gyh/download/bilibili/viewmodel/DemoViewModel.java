@@ -147,13 +147,13 @@ public class DemoViewModel extends ViewModel {
         VideoDownloadData.DataBean infoData = videoDownloadData.getData();
         VideoDownloadData.DataBean.DurlBean durlBean = infoData.getDurl().get(0);
         data.setSize(durlBean.getSize());
-        List<String> backup_url = durlBean.getBackup_url(); // 无logo
-        String downloadUrl;
-        if (backup_url == null || backup_url.size() < 1) {
-            downloadUrl = durlBean.getUrl();
-        } else {
+        List<String> backup_url = durlBean.getBackup_url();
+        String downloadUrl = durlBean.getUrl();
+        if (downloadUrl != null && backup_url.size() > 0) {
             downloadUrl = backup_url.get(0);
         }
+
+        Log.d(TAG, "covertData: downloadUrl " + downloadUrl + " backup_url " + backup_url);
         data.setDownloadUrl(downloadUrl);
         data.setQuality(infoData.getQuality());
         List<String> accept_description = infoData.getAccept_description();
