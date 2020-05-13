@@ -53,6 +53,7 @@ import com.gyh.download.bilibili.model.PageData;
 import com.gyh.download.bilibili.utils.FileNameUtil;
 import com.gyh.download.bilibili.utils.Util;
 import com.gyh.download.bilibili.viewmodel.DemoViewModel;
+import com.gyh.download.ffmpeg.FFmpegManager;
 import com.gyh.download.view.HorizontalRvManager;
 
 import java.io.File;
@@ -61,8 +62,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import io.microshow.rxffmpeg.RxFFmpegCommandList;
-import io.microshow.rxffmpeg.RxFFmpegInvoke;
 import io.microshow.rxffmpeg.RxFFmpegSubscriber;
 
 public class BilibiiliActivity extends AppCompatActivity implements View.OnClickListener {
@@ -224,14 +223,6 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                 toMp4();
             }
         });
-    }
-
-    public static String[] getBoxblur(String srcPath, String destPath) {
-        RxFFmpegCommandList cmdlist = new RxFFmpegCommandList();
-        cmdlist.append("-i");
-        cmdlist.append(srcPath);
-        cmdlist.append(destPath);
-        return cmdlist.build();
     }
 
 
@@ -486,11 +477,11 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
         final String outFilePath = outFile.getAbsolutePath();
         final String srcPath = file.getAbsolutePath();
         Log.d(TAG, "taskComplete: srcPath " + srcPath + " outFilePath " + outFilePath);
-        String[] boxblur = getBoxblur(srcPath, outFilePath);
+        String[] boxblur = FFmpegManager.getTranscoding(srcPath, outFilePath);
         textView_progress.setText("转码中 ");
         final long start = System.currentTimeMillis();
-        RxFFmpegInvoke.getInstance()
-                .runCommandRxJava(boxblur)
+        FFmpegManager
+                .invokeRxJava(boxblur)
                 .subscribe(new RxFFmpegSubscriber() {
                     @Override
                     public void onFinish() {
