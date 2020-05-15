@@ -236,6 +236,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                 if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
+                if (data == null) return;
                 setVideoInfo(data);
                 imageView_cover.setVisibility(View.VISIBLE);
                 Glide.with(BilibiiliActivity.this)
@@ -435,6 +436,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void clickDown(Data data) {
+        if (data == null) return;
         if (!AriaManager.get().isExists()) {
             downloadVideo(data);
             return;

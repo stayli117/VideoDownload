@@ -1,6 +1,8 @@
 package com.gyh.download.bilibili.bibili;
 
 
+import android.util.Log;
+
 import androidx.annotation.MainThread;
 
 import com.gyh.download.bilibili.utils.Util;
@@ -9,6 +11,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Created by  yahuigao
@@ -37,9 +47,54 @@ public class VideoParser {
         this.cookies = cookies;
     }
 
+    //自定义SS验证相关类
+    private static class TrustAllCerts implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            Log.d(TAG, "checkClientTrusted: authType " + authType);
+
+            for (X509Certificate x509Certificate : chain) {
+                int version = x509Certificate.getVersion();
+                String sigAlgName = x509Certificate.getSigAlgName();
+                Log.d(TAG, "checkClientTrusted: sigAlgName " + sigAlgName + " version " + version);
+
+            }
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            Log.d(TAG, "checkServerTrusted: authType " + authType);
+            for (X509Certificate x509Certificate : chain) {
+                int version = x509Certificate.getVersion();
+                String sigAlgName = x509Certificate.getSigAlgName();
+                Log.d(TAG, "checkServerTrusted: sigAlgName " + sigAlgName + " version " + version);
+
+            }
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    }
+
+    private static SSLSocketFactory createSSLSocketFactory() {
+        SSLSocketFactory ssfFactory = null;
+        try {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, new TrustManager[]{new TrustAllCerts()}, new SecureRandom());
+            ssfFactory = sc.getSocketFactory();
+        } catch (Exception e) {
+            Log.e(TAG, "createSSLSocketFactory: ", e);
+        }
+        return ssfFactory;
+    }
+
     public Document getCookiesDocument() {
         try {
-            return Jsoup.connect(util.getCookiesApi()).get();
+            return Jsoup.connect(util.getCookiesApi())
+                    .sslSocketFactory(createSSLSocketFactory())
+                    .get();
         } catch (Exception localException) {
             return null;
         }

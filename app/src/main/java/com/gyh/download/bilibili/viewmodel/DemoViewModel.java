@@ -1,5 +1,6 @@
 package com.gyh.download.bilibili.viewmodel;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -75,6 +76,11 @@ public class DemoViewModel extends ViewModel {
         BaseTask<Data> task = new BaseTask<>(new IExecute<Data>() {
             @Override
             public Data executeOnSub() {
+                String cookies = mVideoParser.getCookies();
+                if (TextUtils.isEmpty(cookies)) {
+                    Log.d(TAG, "executeOnSub: cookies =" + cookies);
+                    return null;
+                }
                 Data data = new Data();
                 String dataDocument = mVideoParser.getDataDocument(inputData);
                 Gson gson = new Gson();
