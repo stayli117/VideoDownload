@@ -83,9 +83,10 @@ public class DemoViewModel extends ViewModel {
                 }
                 Data data = new Data();
                 String dataDocument = mVideoParser.getDataDocument(inputData);
+                Log.d(TAG, "executeOnSub: dataDocument =" + dataDocument);
                 Gson gson = new Gson();
                 VideoInfoData videoInfoData = gson.fromJson(dataDocument, VideoInfoData.class);
-
+                if (videoInfoData == null) return null;
                 int code = videoInfoData.getCode();
                 if (code != 0) {
                     data.setTitle("视频信息获取错误");
@@ -133,6 +134,7 @@ public class DemoViewModel extends ViewModel {
     private void parseDownloadUrlData(Data data, InputData inputData) {
         Gson gson = new Gson();
         String urlDocument = mVideoParser.getUrlDocument(inputData);
+        Log.d(TAG, "executeOnSub: urlDocument =" + urlDocument);
         VideoDownloadData videoDownloadData = gson.fromJson(urlDocument, VideoDownloadData.class);
         covertData(data, videoDownloadData);
 
@@ -147,6 +149,7 @@ public class DemoViewModel extends ViewModel {
         data.setPageDataList(infoData.getPages());
         data.setCoverLink(infoData.getPic());
         data.setQuality(16); // 设置默认值
+
     }
 
     private void covertData(Data data, VideoDownloadData videoDownloadData) {
@@ -162,6 +165,7 @@ public class DemoViewModel extends ViewModel {
         Log.d(TAG, "covertData: downloadUrl " + downloadUrl + " backup_url " + backup_url);
         data.setDownloadUrl(downloadUrl);
         data.setQuality(infoData.getQuality());
+        data.setFormat(infoData.getFormat());
         List<String> accept_description = infoData.getAccept_description();
         List<Integer> accept_quality = infoData.getAccept_quality();
         int size = accept_quality.size();

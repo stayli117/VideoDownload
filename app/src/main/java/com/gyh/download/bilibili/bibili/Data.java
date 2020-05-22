@@ -19,13 +19,19 @@ public class Data {
     private String coverLink = "";
     private String downloadUrl = "";
     private List<PageData> pageDataList;
-    private List<Integer> pages_cids = new ArrayList<>();
-    private List<String> pages_text = new ArrayList<>();
     private int quality = 0;
     private List<QualityData> qualitys = new ArrayList<>();
     private long size = 0;
     private String title = "";
+    private String format = "flv";
 
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public String getFormat() {
+        return format;
+    }
 
     public String getAid() {
         return this.aid;
@@ -41,15 +47,6 @@ public class Data {
 
     public String getDownloadUrl() {
         return this.downloadUrl;
-    }
-
-
-    public List<Integer> getPages_cids() {
-        return this.pages_cids;
-    }
-
-    public List<String> getPages_text() {
-        return this.pages_text;
     }
 
     public int getQuality() {
@@ -100,10 +97,6 @@ public class Data {
         return pageDataList;
     }
 
-    public void setPages_cids(List paramList) {
-        this.pages_cids = paramList;
-    }
-
     public void setQuality(int paramInt) {
         this.quality = paramInt;
     }
@@ -111,7 +104,6 @@ public class Data {
     public void setQualitys(List<QualityData> paramList) {
         this.qualitys = paramList;
     }
-
 
     public void setSize(long paramInt) {
         this.size = paramInt;

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -421,7 +422,11 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
         if (TextUtils.isEmpty(title)) {
             title = data.getCid();
         }
-        String fileName = FileNameUtil.correctFileName(title) + ".flv";
+        String format = data.getFormat();
+        Log.d(TAG, "createFilePath: format " + format);
+        String suffix = format.contains("flv") ? ".flv" : ".mp4";
+        Log.d(TAG, "createFilePath: suffix " + suffix);
+        String fileName = FileNameUtil.correctFileName(title) + suffix;
         Uri uri = new Uri.Builder()
                 .encodedPath(fileName).build();
         String path = uri.getPath();
@@ -472,6 +477,12 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
     private void toMp4() {
         if (mTask == null || !isAutoToMp4) return;
         String filePath = mTask.getFilePath();
+        String suffix = FileNameUtil.extractFileExt(filePath);
+        Log.d(TAG, "toMp4: suffix " + suffix);
+        if (suffix.contains("mp4")) { // 直接播放
+            showDialogTip(filePath);
+            return;
+        }
         File file = new File(filePath);
         String name = FileNameUtil.removeFileExt(file.getName());
         Log.d(TAG, "toMp4: name " + name);
@@ -493,6 +504,26 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                         isToMp4ing = false;
                         scanFile(outFile);
                         Toast.makeText(BilibiiliActivity.this, "转码完成", Toast.LENGTH_SHORT).show();
+
+
+                        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+                        retriever.setDataSource(srcPath);
+                        String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH); //宽
+                        String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT); //高
+                        String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);//视频的方向角度
+                        long duration = Long.parseLong(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)) * 1000;//视频的长度
+
+                        Log.d(TAG, "toMp4 src: width " + width + " height " + height + " duration " + duration + " rotation " + rotation);
+
+                        retriever.setDataSource(outFilePath);
+
+                        width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH); //宽
+                        height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT); //高
+                        rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);//视频的方向角度
+                        duration = Long.parseLong(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)) * 1000;//视频的长度
+                        Log.d(TAG, "toMp4 out : width " + width + " height " + height + " duration " + duration + " rotation " + rotation);
+
+
                         deleteSrcVideo(srcPath);
                         showDialogTip(outFilePath);
                     }

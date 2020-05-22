@@ -110,6 +110,7 @@ public class VideoParser {
                     .data(empty ? "aid" : "bvid", empty ? inputData.getAid() : inputData.getBid())
                     .ignoreContentType(true)
                     .userAgent(userAgent)
+                    .sslSocketFactory(createSSLSocketFactory())
                     .timeout(5000)
                     .get()
                     .text();
@@ -129,6 +130,7 @@ public class VideoParser {
                     .cookie("SESSDATA", cookies)
                     .ignoreContentType(true)
                     .userAgent(this.userAgent)
+                    .sslSocketFactory(createSSLSocketFactory())
                     .timeout(5000)
                     .get()
                     .text();
