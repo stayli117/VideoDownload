@@ -502,7 +502,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
                         textView_progress.setText(String.format("文件地址： %s", outFilePath));
                         progressBar_progress.setProgress(100);
                         isToMp4ing = false;
-                        scanFile(outFile);
+
                         Toast.makeText(BilibiiliActivity.this, "转码完成", Toast.LENGTH_SHORT).show();
 
 
@@ -556,6 +556,7 @@ public class BilibiiliActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void showDialogTip(final String outFilePath) {
+        scanFile(new File(outFilePath));
         if (isAutoPlay) {
             playVideo(outFilePath);
             return;
